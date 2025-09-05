@@ -1,0 +1,1 @@
+print("Herzlich Willkommen beim Rezepte-Manager der Welt!")
