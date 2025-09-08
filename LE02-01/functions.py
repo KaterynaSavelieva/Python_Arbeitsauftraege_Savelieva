@@ -5,7 +5,3 @@ def print_all_recipes(recipes):
         print(f"🍴 {name}")  # Rezeptname
         print(f"   Zutaten: {', '.join(details['zutaten'])}")
         print(f"   Zubereitung: {details['zubereitung']}\n")
-
-
-
-

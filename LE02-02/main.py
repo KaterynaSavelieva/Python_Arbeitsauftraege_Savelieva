@@ -26,7 +26,7 @@ while True:
             ingredients_list = f_input_ingredients()
             f_find_recipes(all_recipes, ingredients_list)
         case "Q":
-            print("Auf Wiedersehen!")
+            print("Auf Wiedersehen!!")
             break
         case _:
             print("Ungültige Eingabe. Bitte A, B oder Q wählen.")
