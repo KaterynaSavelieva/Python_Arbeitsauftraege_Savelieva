@@ -23,12 +23,10 @@ while True:
         case "A":
             f_print_all_recipes(all_recipes)            # Übergabe von globaler Variable all_recipes
         case "B":
-            ingredients_list = f_input_ingredients()    # Variable ingredients_list
-            f_find_recipes(all_recipes, ingredients_list)
+            matches=f_find_recipes(all_recipes)
+            f_print_matches(matches)
         case "Q":
             print("Auf Wiedersehen!!")
             break
         case _:
             print("Ungültige Eingabe. Bitte A, B oder Q wählen.")
-
-
