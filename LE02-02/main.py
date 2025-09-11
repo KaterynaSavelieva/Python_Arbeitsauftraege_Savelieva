@@ -26,10 +26,15 @@ while True:
             matches=f_find_recipes(all_recipes)
             f_print_matches(matches)
         case "C":
-            print("Neues Rezept hinzufügen")
             f_add_recipe(all_recipes)
         case "D":
-            print("Rezept löschen")
+            f_delete_recipe(all_recipes)
+        case "E":
+            f_save_recipes(all_recipes)
+        case "F":
+            all_recipes = f_load_recipes(all_recipes)
+        case "G":
+            print("Rezept bearbeiten")
         case "Q":
             print("Auf Wiedersehen!!")
             break
