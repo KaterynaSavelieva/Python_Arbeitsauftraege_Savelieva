@@ -18,10 +18,10 @@ all_recipes = {
 }
 # --- Hauptprogramm ---
 while True:
-    user_choice = f_show_menu()     # Variable: user_choice = Eingabe des Benutzers
-    match user_choice.upper():      # Variable user_choice wird geprüft
+    user_choice = f_show_menu()
+    match user_choice.upper():
         case "A":
-            f_print_all_recipes(all_recipes)            # Übergabe von globaler Variable all_recipes
+            f_print_all_recipes(all_recipes)
         case "B":
             matches=f_find_recipes(all_recipes)
             f_print_matches(matches)
