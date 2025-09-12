@@ -33,7 +33,6 @@ def f_parse_ingredients(input: str) -> list[str]:
 def f_match_ingredients(recipe_ingredients: dict[str, dict], ingredients_list: list[str]) -> dict[str, dict]:
     # Leeres Dictionary für die Treffer
     match_ingredients: dict[str, dict] = {}
-
     # Durch alle Rezepte gehen
     for name, details in recipe_ingredients.items():
         # Zutaten des Rezepts in Kleinbuchstaben umwandeln
@@ -47,17 +46,42 @@ def f_match_ingredients(recipe_ingredients: dict[str, dict], ingredients_list: l
             if ingredient not in details_lower_case:
                 alle_gefunden = False
                 break
-
         # Wenn alle Zutaten gefunden wurden, Rezept speichern
         if alle_gefunden:
             match_ingredients[name] = details
-
     return match_ingredients
 
-def f_find_recipes(all_recipes: dict) -> dict[str, dict]:
+def f_find_ingredients(all_recipes: dict) -> dict[str, dict]:
     ingredients_list=f_input_ingredients()
     matches=f_match_ingredients(all_recipes, ingredients_list)
     return matches
+
+def f_recipe_change()-> str:
+    print("1 - Hinzufügen von Zutaten")
+    print("2 - Löschen von Zutaten")
+    print("3 - Bearbeiten der Anleitung")
+    print("4 - Beenden")
+    return input ("Wählen Sie: ").strip()
+
+def f_find_recipe(all_recipes: dict) -> dict[str, dict]:
+    while True:
+        recipe_change = input("Bitte geben der Name des Rezepts ein, das Sie bearbeiten möchten\n").strip().title()
+        if recipe_change not in all_recipes:
+            print("Rezept nicht gefunden")
+            return{}
+        else:
+            recipe_change= {recipe_change: all_recipes[recipe_change]}
+            f_print_all_recipes(recipe_change)
+            f_recipe_change()
+            return recipe_change
+
+def f_change_instructions(all_recipes, recipe_change) -> None:
+    if not recipe_change:
+        new_instruction = input("Bitte geben Sie die neue Anleitung zum Rezept `{recipe_change}`\n`")
+        all_recipes[recipe_change]["zubereitung"]=new_instruction
+        print(f"Die Anleitung für das Rezept `{recipe_change}` wurde geändert!`")
+
+
 
 def f_print_matches(matches: dict[str, dict]) -> None:
     if matches:
