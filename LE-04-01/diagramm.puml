@@ -1,0 +1,34 @@
+@startuml diagram_main
+title Rezepte-Manager – Hauptablauf
+
+start
+:Programm starten;
+repeat
+  :Menü anzeigen (f_show_menu);
+  :Eingabe user_choice;
+  if (user_choice) then (A)
+    :Alle Rezepte anzeigen\n(f_print_all_recipes all_recipes);
+  elseif (user_choice) then (B)
+    :Zutaten eingeben\n(f_input_ingredients);
+    :Treffer finden\n(f_find_ingredients all_recipes);
+    :Treffer ausgeben\n(f_print_matches);
+  elseif (user_choice) then (C)
+    :Neues Rezept hinzufügen\n(f_add_recipe all_recipes);
+  elseif (user_choice) then (D)
+    :Rezept löschen\n(f_delete_recipe all_recipes);
+  elseif (user_choice) then (E)
+    :Alle Rezepte speichern\n(f_save_recipes all_recipes);
+  elseif (user_choice) then (F)
+    :Rezepte aus Datei laden\n(all_recipes = f_load_recipes all_recipes);
+  elseif (user_choice) then (G)
+    :Rezept bearbeiten\n(f_edit_recipe all_recipes);
+  elseif (user_choice) then (Q)
+    break
+  else
+    :Ungültige Eingabe -> Hinweis;
+  endif
+repeat while (weiter?)
+stop
+@enduml
+
+

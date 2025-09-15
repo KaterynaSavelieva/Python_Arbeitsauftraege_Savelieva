@@ -1,19 +1,11 @@
 {
-  "Pizza": {
-    "zutaten": [
-      "Mehl",
-      "eier",
-      "Teig",
-      "Tomatensauce",
-      "Käse"
-    ],
-    "zubereitung": "Die Zutaten auf den Teig legen und im Ofen backen."
-  },
   "Salat": {
     "zutaten": [
       "Tomaten",
       "Gurken",
-      "Olivenöl"
+      "Olivenöl",
+      "Salz",
+      "Grtyrt"
     ],
     "zubereitung": "Alles klein schneiden und mit Olivenöl mischen."
   },
@@ -25,10 +17,10 @@
     ],
     "zubereitung": "Teig anrühren und in einer Pfanne ausbacken."
   },
-  "Sdfsdfgd": {
+  "Dfdf": {
     "zutaten": [
-      "Dgdfg"
+      "Dsfsdf"
     ],
-    "zubereitung": "erfefer"
+    "zubereitung": "dsfdsfdsfds"
   }
 }

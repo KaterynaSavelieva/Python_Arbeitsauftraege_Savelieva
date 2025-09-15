@@ -1,4 +1,4 @@
-print("Herzlich Willkommen beim Rezepte-Manager der Welt!")
+print("\nHerzlich Willkommen beim Rezepte-Manager der Welt!")
 from functions_new import*
 
 # Dictionary mit allen Rezepten  →  Variable (global)
@@ -21,8 +21,9 @@ all_recipes = f_load_recipes(all_recipes)
 # --- Hauptprogramm ---
 while True:
     user_choice = f_show_menu()
-    match user_choice.upper():
+    match user_choice.strip().upper():
         case "A":
+            print("\n📖👩‍🍳 Alle Rezepte:\n")
             f_print_all_recipes(all_recipes)
         case "B":
             matches=f_find_ingredients(all_recipes)
@@ -32,27 +33,14 @@ while True:
         case "D":
             f_delete_recipe(all_recipes)
         case "E":
-            f_save_recipes(all_recipes)
+            if f_save_recipes(all_recipes):
+                print("Rezepte wurden erfolgreich gespeichert (Datei: rezepte.json).")
         case "F":
             all_recipes = f_load_recipes(all_recipes)
         case "G":
-            print("Rezept bearbeiten!")
-            recipe_change=f_find_recipe(all_recipes)
-            if recipe_change:
-                while True:
-                    user_change_choice = f_recipe_change()
-                    match user_change_choice:
-                        case "1":
-                            print("1 - Hinzufügen von Zutaten")
-                        case "2":
-                            print("2 - Löschen von Zutaten")
-                        case "3":
-                            print("3 - Bearbeiten der Anleitung")
-                        case "4":
-                            print("4 - Beenden")
-                            break
+            f_edit_recipe(all_recipes)
         case "Q":
             print("Auf Wiedersehen!!")
             break
         case _:
-            print("Ungültige Eingabe. Bitte A, B oder Q wählen.")
+            print("Ungültige Eingabe. Bitte A, B, C, D, E, F, G oder Q wählen.")
