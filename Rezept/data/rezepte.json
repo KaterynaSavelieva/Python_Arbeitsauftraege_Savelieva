@@ -1,0 +1,56 @@
+{
+  "Pizza": {
+    "zutaten": [
+      "Mehl",
+      "Eier",
+      "Teig",
+      "Tomatensauce",
+      "Käse"
+    ],
+    "zubereitung": "Die Zutaten auf den Teig legen und im Ofen backen."
+  },
+  "Salat": {
+    "zutaten": [
+      "Tomaten",
+      "Gurken",
+      "Olivenöl",
+      "Salz",
+      "Grtyrt"
+    ],
+    "zubereitung": "Alles klein schneiden und mit Olivenöl mischen."
+  },
+  "Pfannkuchen": {
+    "zutaten": [
+      "Mehl",
+      "Milch",
+      "Eier"
+    ],
+    "zubereitung": "Teig anrühren und in einer Pfanne ausbacken."
+  },
+  "Aaa": {
+    "zutaten": [
+      "Aaa",
+      "Vvv",
+      "Sss",
+      "Aaasd"
+    ],
+    "zubereitung": "fvdfgdfhgf"
+  },
+  "Dfsd": {
+    "zutaten": [
+      "Aaa",
+      "Aaa",
+      "Aaa"
+    ],
+    "zubereitung": "wefrdewfr"
+  },
+  "Sss": {
+    "zutaten": [
+      "Dfdf",
+      "Dsfdsf",
+      "Dfdfg",
+      "Fff"
+    ],
+    "zubereitung": "dfgcf"
+  }
+}
