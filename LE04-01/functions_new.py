@@ -1,11 +1,30 @@
+RESET = "\033[0m"
+BOLD = "\033[1m"
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
+
+NAME_MIN, NAME_MAX = 2, 20
+INGREDIENT_MAX = 30
+
+from tabulate import tabulate
+
 def f_print_all_recipes(recipes):             # Parameter: recipes (zeigt z. B. auf all_recipes)
+    f_print_title("📖👩‍🍳 Alle Rezepte:")
+    table=[]
     for name, details in recipes.items():     # Variable name = Schlüssel, details = Value
-        print(f"🍴 {name}")  # Rezeptname
-        print(f"   Zutaten: {', '.join(details['zutaten'])}")   # Variable details
-        print(f"   Zubereitung: {details['zubereitung']}\n")    # Variable details
+        #print(f"🍴 {name}")  # Rezeptname
+        #print(f"   Zutaten: {', '.join(details['zutaten'])}")   # Variable details
+        #print(f"   Zubereitung: {details['zubereitung']}\n")    # Variable details
+        ingredients = ", ".join(details["zutaten"])
+        instruction = details['zubereitung']
+        table.append([name, ingredients, instruction])
+    print(tabulate(table, headers=[BOLD +"Rezept", "Zutaten", "Zubereitung"+ RESET], tablefmt="fancy_grid"))
+    f_wait_for_enter()
 
 def f_show_menu()-> str:
-    print("\n-- 🥗🥘🥞Menü 🥓🫘--")
+    f_print_title("-- 🥗🥘🥞Menü 🥓🫘--")
     print("A - Alle Rezepte anzeigen 📖📖📖📖📖")
     print("B - Rezepte nach Zutaten finden🔎")
     print("C - Neues Rezept hinzufügen➕")
@@ -36,6 +55,7 @@ def f_match_ingredients(recipe_ingredients: dict[str, dict], ingredients_list: l
     return match_ingredients
 
 def f_find_ingredients(all_recipes: dict) -> dict[str, dict]:
+    f_print_title("Filtern nach vorhandenen Zutaten")
     ingredients_list=f_input_ingredients()
     matches=f_match_ingredients(all_recipes, ingredients_list)
     return matches
@@ -85,6 +105,7 @@ def f_delete_ingredients(all_recipes:dict, recipe_change:str) -> None:
     if not_found:
         print(f"Nicht gefunden: {','.join(not_found)}")
     f_print_all_recipes({recipe_change: all_recipes[recipe_change]})
+    f_wait_for_enter()
 
 def f_print_matches(matches: dict[str, dict]) -> None:
     if matches:
@@ -117,6 +138,7 @@ def f_add_recipe(all_recipes: dict) -> None:
     all_recipes[name]={"zutaten": ingredients_list, "zubereitung": instruction}
     print(f"Rezept '{name}' wurde hinzugefügt und gespeichert.")
     f_save_recipes(all_recipes)
+    f_wait_for_enter()
 
 def f_delete_recipe(all_recipes: dict[str, dict]) -> None:
     name=input("Bitte geben Sie den Name des Rezeptes ein, das Sie löschen möchten: \n").strip().title()
@@ -151,7 +173,7 @@ def f_check_letters_and_digits(value: str) -> tuple[bool, str]:
     return True, ""
 
 def f_validate_recipe_name(name: str) -> tuple[bool, str]:
-    ok, msg = f_check_length(name, 1, 200)
+    ok, msg = f_check_length(name, NAME_MIN, NAME_MAX)
     if not ok:
         return False, "Rezeptname: " + msg
     # Rezeptname: nur Buchstaben + Leerzeichen
@@ -167,15 +189,13 @@ def f_validate_ingredients_list(ingredients_list: list[str]) -> tuple[bool, str]
         return False, "Die Zutatenliste darf nicht leer sein."
 
     for z in ingredients_list:
-        ok, msg = f_check_length(z, 1, 100)
+        ok, msg = f_check_length(z, NAME_MIN, INGREDIENT_MAX)
         if not ok:
             return False, "Zutat: " + msg
-
         # Zutaten: Buchstaben + Ziffern + Leerzeichen erlaubt
         ok, msg = f_check_letters_and_digits(z)
         if not ok:
             return False, "Zutat: " + msg
-
     return True, ""
 
 import json
@@ -187,22 +207,17 @@ def f_save_recipes(all_recipes: dict, subset: dict  | None=None, delete: list[st
     #Speichert alle Rezepte in der Datei rezepte.json.
     try:
         to_save =dict(all_recipes)
-
         # Falls nur bestimmte Rezepte gespeichert werden sollen
         if subset: # Nur die übergebenen Rezepte speichern. Zuerst die bestehende Datei öffnen und laden
             to_save.update(subset)             # überschreibt gleiche Keys oder fügt neue hinzu
-
         # Falls Rezepte gelöscht werden sollen
         if delete:
             for name in delete:
                 to_save.pop(name, None)
-
-
         # Speichern
         with open("rezepte.json", "w", encoding="utf-8") as f:
             # Dictionary all_recipes in JSON-Datei schreiben
             json.dump(to_save, f, ensure_ascii=False, indent=2)# hübsch formatiert, Umlaute lesbar
-
         return True
     except Exception as e:
         # Allgemeiner Fehler beim Speichern
@@ -226,6 +241,7 @@ def f_load_recipes(all_recipes: dict) -> dict:
     except json.JSONDecodeError:
         # Wenn Datei leer oder beschädigt ist
         print("Fehler: Die Datei rezepte.json ist beschädigt oder leer.")
+    f_wait_for_enter()
     return all_recipes
 
 def f_edit_recipe(all_recipes:dict)->None:
@@ -245,14 +261,15 @@ def f_edit_recipe(all_recipes:dict)->None:
                     if f_save_recipes(all_recipes, {recipe_change: all_recipes[recipe_change]}):
                         print(f"Rezept {recipe_change} wurde gespeichert.")
                 case "5":
-                    print("5 - Beenden")
+                    print("Auf Wiedersehen!")
                     break
+    f_wait_for_enter()
 
 def f_wait_for_enter() -> None:
     input("\nDrücken Sie ENTER, um fortzufahren...")
 
 def f_print_title(text: str) -> None:
-    breit =60
-    print("\n" + "=" * breit)
-    print(text.center(breit))
-    print("=" * breit)
+    breit =70
+    print(f"{YELLOW}\n{'='*breit}{RESET}")
+    print(BOLD+BLUE+text.center(breit)+RESET)
+    print(f"{YELLOW}{'='*breit}{RESET}")
