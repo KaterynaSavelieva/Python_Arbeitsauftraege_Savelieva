@@ -3,8 +3,9 @@ title Rezepte-Manager – Hauptablauf
 
 start
 :Programm starten;
+:Menü anzeigen (f_show_menu);
 repeat
-  :Menü anzeigen (f_show_menu);
+
   :Eingabe user_choice;
   if (user_choice) then (A)
     :Alle Rezepte anzeigen\n(f_print_all_recipes all_recipes);
@@ -14,6 +15,7 @@ repeat
     :Treffer ausgeben\n(f_print_matches);
   elseif (user_choice) then (C)
     :Neues Rezept hinzufügen\n(f_add_recipe all_recipes);
+
   elseif (user_choice) then (D)
     :Rezept löschen\n(f_delete_recipe all_recipes);
   elseif (user_choice) then (E)
@@ -23,11 +25,11 @@ repeat
   elseif (user_choice) then (G)
     :Rezept bearbeiten\n(f_edit_recipe all_recipes);
   elseif (user_choice) then (Q)
-    break
+    stop
   else
     :Ungültige Eingabe -> Hinweis;
   endif
-repeat while (weiter?)
+repeat while
 stop
 @enduml
 

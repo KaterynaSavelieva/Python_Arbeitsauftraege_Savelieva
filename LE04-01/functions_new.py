@@ -16,7 +16,7 @@ def f_show_menu()-> str:
     print("Q - Beenden🫡")
     return input ("Wählen Sie: ").strip().upper()
 
-def f_input_ingredients() -> list [str]:
+def f_input_ingredients() -> list[str]:
     while True:
         ingredients_input = input("Bitte geben Sie die Zutaten ein:\n(getrennt durch Kommata)\n")
         ingredients_list= [z.strip().title() for z in ingredients_input.split(",") if z.strip()]# direkt parsen: splitten, trimmen, Titelcase, leere Einträge filtern
@@ -65,7 +65,7 @@ def f_find_recipe(all_recipes: dict) -> str|None:
             return recipe_change
 
 def f_change_instructions(all_recipes, recipe_change) -> None:
-    new_instruction = input("Bitte geben Sie die neue Anleitung zum Rezept `{recipe_change}`\n`")
+    new_instruction = input(f"Bitte geben Sie die neue Anleitung zum Rezept `{recipe_change}`\n`")
     all_recipes[recipe_change]["zubereitung"]=new_instruction
     print(f"Die Anleitung für das Rezept {recipe_change} wurde geändert!`")
     f_print_all_recipes({recipe_change: all_recipes[recipe_change]})
@@ -93,21 +93,24 @@ def f_print_matches(matches: dict[str, dict]) -> None:
     else:
         print("Kein Rezept passt zu deiner Eingabe.")
 
-def f_input_recipe_name() -> str:
+def f_input_recipe_name(all_recipes: dict):
     while True:
         name = input("Bitte geben Sie den Name des Rezeptes ein: \n").strip().title()  # ohne Leerzeichen
-        # Validierung aufrufen
         ok, msg = f_validate_recipe_name(name)
-        if ok:
-            return name
-        print(f"Fehler: {msg}")
+        if not ok:
+            print(f"Fehler: {msg}")
+            continue
+        if name in all_recipes:
+            print(f"Fehler: das Rezept {name} existiert bereits. Bitte wählen Sie einen anderen Namen.")
+            continue
+        return name
 
 def f_input_recipe_instruction() -> str:
     instruction = input("Bitte geben Sie die Anleitung des Rezeptes ein: \n").strip()
     return instruction
 
 def f_add_recipe(all_recipes: dict) -> None:
-    name = f_input_recipe_name()
+    name = f_input_recipe_name(all_recipes)
     ingredients_list = f_input_ingredients()
     instruction = f_input_recipe_instruction()
 
@@ -123,7 +126,7 @@ def f_delete_recipe(all_recipes: dict[str, dict]) -> None:
 
         save=input("Möchten Sie Änderung speichern? Y/N\n").strip().title()
         if save == "Y":
-            if f_save_recipes(all_recipes, delete= [name]):
+            if f_save_recipes(all_recipes):#, delete= [name]
 #f_save_recipes(...) gibt True zurück, wenn das Speichern ohne Fehler geklappt hat.
 # (z. B. Datei gesperrt, kein Speicherplatz, kaputte JSON-Datei) -False=
                 print(f"Rezept {name} wurde gelöscht und gespeichert")
@@ -151,7 +154,6 @@ def f_validate_recipe_name(name: str) -> tuple[bool, str]:
     ok, msg = f_check_length(name, 1, 200)
     if not ok:
         return False, "Rezeptname: " + msg
-
     # Rezeptname: nur Buchstaben + Leerzeichen
     ok, msg = f_check_only_letters(name)
     if not ok:
@@ -240,8 +242,17 @@ def f_edit_recipe(all_recipes:dict)->None:
                 case "3":
                     f_change_instructions(all_recipes, recipe_change)
                 case "4":
-                    if f_save_recipes({recipe_change: all_recipes[recipe_change]}):
+                    if f_save_recipes(all_recipes, {recipe_change: all_recipes[recipe_change]}):
                         print(f"Rezept {recipe_change} wurde gespeichert.")
                 case "5":
                     print("5 - Beenden")
                     break
+
+def f_wait_for_enter() -> None:
+    input("\nDrücken Sie ENTER, um fortzufahren...")
+
+def f_print_title(text: str) -> None:
+    breit =60
+    print("\n" + "=" * breit)
+    print(text.center(breit))
+    print("=" * breit)
