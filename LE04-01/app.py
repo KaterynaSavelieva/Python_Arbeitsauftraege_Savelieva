@@ -1,242 +1,409 @@
+import json
 import tkinter as tk
-from tkinter import ttk
-from data import all_recipes
+from tkinter import ttk, messagebox
 
+import functions_new as f          # валідатори + робота з JSON
+from data import all_recipes       # початкові рецепти в RAM
+
+
+# --------- тихі обгортки для файлу -----------------------------------------
+def _load_recipes_into(target: dict) -> bool:
+    """Тихо підвантажити rezepte.json у target (без принтів/пауz)."""
+    if hasattr(f, "f_load_recipes_silent"):
+        return bool(f.f_load_recipes_silent(target))
+    try:
+        with open("rezepte.json", "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if isinstance(data, dict):
+            target.update(data)
+            return True
+        return False
+    except Exception:
+        return False
+
+
+def _save_recipes_from(source: dict) -> bool:
+    """Тихо зберегти source у rezepte.json (True/False)."""
+    if hasattr(f, "f_save_recipes_silent"):
+        return bool(f.f_save_recipes_silent(source))
+    return bool(f.f_save_recipes(source))
+
+
+# ============================== GUI ========================================
 def run_gui():
     root = tk.Tk()
-    root.title("Rezepte")          # Заголовок вікна
-    root.geometry("800x600")       # Розмір вікна 800x600
+    root.title("Rezepte")
+    root.geometry("1000x600")
 
-    # ---- Основний контейнер ----
-    main_frame = ttk.Frame(root, padding=20)   # padding=20 → внутрішній відступ
-    main_frame.pack(fill="both", expand=True)  # Frame розтягується на все вікно
+    # каркас 2 колонки у пропорції 2:3
+    main = ttk.Frame(root, padding=20)
+    main.pack(fill="both", expand=True)
+    main.columnconfigure(0, weight=2, uniform="col")
+    main.columnconfigure(1, weight=3, uniform="col")
+    main.rowconfigure(0, weight=1)
 
-    # Налаштування сітки для main_frame (2 колонки, 1 рядок)
-    main_frame.columnconfigure(0, weight=1)    # перша колонка (зліва) займає 1 частку простору
-    main_frame.columnconfigure(1, weight=2)    # друга колонка (справа) займає 2 частки простору
-    main_frame.rowconfigure(0, weight=1)       # робимо рядок "розтяжним" по висоті
-
-    # --- ліва колонка: заголовок + список + кнопки ---
-    left = ttk.Frame(main_frame)               # створюємо контейнер (ліва колонка) всередині main_frame
+    # ---------------- ЛІВО --------------------------------------------------
+    left = ttk.Frame(main)
     left.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
-    # row=0, column=0 → ставимо у перший рядок і першу колонку
-    # sticky="nsew" → розтягується у всі сторони (North, South, East, West)
-    # padx=(0, 12) → зовнішній відступ справа на 12 px (щоб не злипався з правою колонкою)
+    left.rowconfigure(2, weight=1)       # рядок зі списком — тягнеться
+    left.columnconfigure(0, weight=1)
 
-    # Заголовок
-    ttk.Label(left, text="Rezepte", font=("Arial", 22, "bold italic")).pack(pady=(0, 20))
-    # pady=(0,20) → відступ зверху 0, знизу 20 px
+    ttk.Label(left, text="Rezepte", font=("Arial", 16, "bold")).grid(
+        row=0, column=0, sticky="w", pady=(0, 8)
+    )
 
-    # ---- Список рецептів ----
-    listbox = tk.Listbox(left, height=10, width=50, font=("Arial", 12, "italic"))
-    listbox.pack(pady=10)
+    # панель фільтра
+    filter_bar = ttk.Frame(left)
+    filter_bar.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+    filter_bar.columnconfigure(1, weight=1)
 
-    # Тестові дані (тимчасово). Тепер це dict, щоб справа було що показати.
-    # all_recipes = {
-    #     "Pizza": {
-    #         "zutaten": ["Mehl", "Eier", "Tomatensauce", "Käse"],
-    #         "zubereitung": "Teig anrühren, belegen und im Ofen backen."
-    #     },
-    #     "Salat": {
-    #         "zutaten": ["Tomaten", "Gurken", "Olivenöl"],
-    #         "zubereitung": "Alles klein schneiden und mit Öl mischen."
-    #     },
-    #     "Pfannkuchen": {
-    #         "zutaten": ["Mehl", "Milch", "Eier"],
-    #         "zubereitung": "Teig rühren und in der Pfanne ausbacken."
-    #     },
-    # }
+    mode_var = tk.StringVar(value="name")
+    rb_name = ttk.Radiobutton(filter_bar, text="Name", value="name", variable=mode_var)
+    rb_zut  = ttk.Radiobutton(filter_bar, text="Zutaten", value="zutaten", variable=mode_var)
+    rb_name.grid(row=0, column=0, sticky="w")
+    rb_zut.grid(row=0, column=1, sticky="w", padx=(10, 0))
 
-    # Заповнюємо список іменами рецептів (ключами dict)
-    for name in all_recipes.keys():
-        listbox.insert(tk.END, name)   # tk.END → додаємо новий елемент у кінець списку
+    query_var = tk.StringVar()
+    entry = ttk.Entry(filter_bar, textvariable=query_var)     # поле пошуку
+    entry.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(6, 0))
 
-    # --- права колонка: деталі рецепта ---
-    right = ttk.Frame(main_frame)
+    btn_filter = ttk.Button(filter_bar, text="Filtern")       # кнопка фільтру
+    btn_all    = ttk.Button(filter_bar, text="Alle")          # показати все
+    btn_filter.grid(row=1, column=2, padx=(8, 0))
+    btn_all.grid(row=1, column=3, padx=(6, 0))
+
+    # список рецептів
+    listbox = tk.Listbox(left, font=("Arial", 12, "italic"))
+    listbox.grid(row=2, column=0, sticky="nsew")
+
+    # статус під списком
+    status_var = tk.StringVar(value="")
+    ttk.Label(left, textvariable=status_var).grid(row=3, column=0, sticky="ew", pady=(6, 0))
+
+    # блок кнопок
+    buttons = ttk.Frame(left)
+    buttons.grid(row=4, column=0, pady=(10, 0), sticky="ew")
+    for c in (0, 1):
+        buttons.columnconfigure(c, weight=1)
+
+    btn_opts = {"width": 20}                        # однакова ширина кнопок
+    grid_opts = {"padx": 6, "pady": 6, "sticky": "ew"}
+
+    btn_add    = ttk.Button(buttons, text="Add Rezept", **btn_opts)
+    btn_edit   = ttk.Button(buttons, text="Rezept bearbeiten", **btn_opts)
+    btn_delete = ttk.Button(buttons, text="Rezept löschen", **btn_opts)
+    btn_reload = ttk.Button(buttons, text="Reload", **btn_opts)
+    btn_exit   = ttk.Button(buttons, text="Beenden", **btn_opts)
+
+    btn_add.grid(   row=0, column=0, **grid_opts)
+    btn_edit.grid(  row=0, column=1, **grid_opts)
+    btn_delete.grid(row=1, column=0, **grid_opts)
+    btn_reload.grid(row=1, column=1, **grid_opts)
+    btn_exit.grid(  row=2, column=0, columnspan=2, **grid_opts)
+
+    # ---------------- ПРАВО -------------------------------------------------
+    right = ttk.Frame(main)
     right.grid(row=0, column=1, sticky="nsew")
+    ttk.Label(right, text="Details", font=("Arial", 16, "bold")).pack(anchor="w")
+    details = tk.Text(right, wrap="word", font=("Arial", 12), state="disabled")
+    details.pack(fill="both", expand=True, pady=(6, 0))
 
-    ttk.Label(right, text="Details", font=("Arial", 16, "bold")).pack(pady=(0, 8))
+    # ---------------- Дані у список ----------------------------------------
+    _load_recipes_into(all_recipes)
 
-    details = tk.Text(right, wrap="word", height=20, font=("Arial", 12))
-    details.insert("1.0", "Wähle ein Rezept links, um Details anzuzeigen…")
-    details.configure(state="disabled")  # робимо поле тільки для читання
-    details.pack(fill="both", expand=True)
+    def f_all_names_sorted():
+        """
+        Допоміжна функція.
+        Повертає всі назви рецептів (ключі словника all_recipes),
+        відсортовані у алфавітному порядку (без врахування регістру).
+        Використовується, щоб список рецептів у вікні завжди був охайно відсортований.
+        """
+        # str.casefold()— кращий за lower() для алфавітів із умлаутами тощо
+        return sorted(all_recipes.keys(), key=str.casefold)
 
-    # ---- Маленькі утиліти -------------------------------------------------
+    def f_refresh_list(names):
+        """Оновлює список рецептів у Listbox зліва + рядок статусу."""
+        listbox.delete(0, tk.END)
+        for n in names:
+            listbox.insert(tk.END, n)
+        status_var.set(f"Angezeigt: {len(names)} von {len(all_recipes)}")
 
-    def show_details(name: str):
-        """Показуємо деталі рецепта справа."""
+    # Виклик на старті: показати всі рецепти (відсортовані по алфавіту)
+    f_refresh_list(f_all_names_sorted())
+
+    # ---------------- Утиліти ----------------------------------------------
+    def f_update_buttons_state():
+        # Ця функція робить кнопки активними лише тоді, коли в списку рецептів щось вибрано.
+        there_is_selection = bool(listbox.curselection())
+        new_state = "normal" if there_is_selection else "disabled"
+        btn_edit.configure(state=new_state)
+        btn_delete.configure(state=new_state)
+
+    def f_show_details(name):
+        """Заповнює праву панель деталями обраного рецепта."""
         data = all_recipes.get(name)
         details.configure(state="normal")
         details.delete("1.0", tk.END)
 
         if not data:
-            details.insert("1.0", f"🍽️ {name}\n\n(noch keine Details)")
+            details.insert("1.0", f"🍽 {name}\n\n(noch keine Details)")
         else:
-            zutaten = ", ".join(data.get("zutaten", []))
-            zub = data.get("zubereitung", "")
-            details.insert("1.0", f"🍽️ {name}\n\nZutaten: {zutaten}\n\nZubereitung:\n{zub}")
+            ingredients = ", ".join(data.get("zutaten", []))
+            instruction = data.get("zubereitung", "")
+            details.insert("1.0", f"{name}\n\nZutaten: {ingredients}\n\nZubereitung:\n{instruction}")
 
         details.configure(state="disabled")
 
-    # ---- КНОПКИ (створюємо зараз, щоб мати на них посилання нижче) --------
-
-    buttons = ttk.Frame(left)          # контейнер для кнопок (2x2)
-    buttons.pack(padx=10, pady=15)
-    buttons.columnconfigure(0, weight=1)
-    buttons.columnconfigure(1, weight=1)
-
-    grid_opts = {"padx": 10, "pady": 10}
-
-    # Заглушки (тимчасово, справжні команди призначимо нижче, коли будуть функції)
-    btn_add    = ttk.Button(buttons, text="Add Rezept")
-    btn_edit   = ttk.Button(buttons, text="Rezept bearbeiten")
-    btn_delete = ttk.Button(buttons, text="Rezept löschen")
-    btn_exit   = ttk.Button(buttons, text="Beenden", command=root.destroy)
-
-    btn_add.grid(row=0, column=0, **grid_opts)
-    btn_edit.grid(row=0, column=1, **grid_opts)
-    btn_delete.grid(row=1, column=0, **grid_opts)
-    btn_exit.grid(row=1, column=1, **grid_opts)
-
-    # --- Керування станом кнопок (enable/disable) --------------------------
-
-    def update_buttons_state():                               # ← NEW
-        """Вмикає/вимикає кнопки Edit/Delete залежно від виділення."""
-        has_sel = bool(listbox.curselection())
-        state = "normal" if has_sel else "disabled"
-        btn_edit.configure(state=state)
-        btn_delete.configure(state=state)
-
-    # ---- Обробники UI -----------------------------------------------------
-
-    def on_select(_evt=None):                                 # ← CHANGED
-        """Коли користувач обрав елемент у списку."""
-        sel = listbox.curselection()
-        if not sel:
-            update_buttons_state()
+    # ---------------- Обробник єдиної потрібної події ----------------------
+    def f_on_select(_event=None):
+        """Користувач вибрав елемент у Listbox."""
+        selected_indices = listbox.curselection()
+        if not selected_indices:
+            f_update_buttons_state()
             return
-        name = listbox.get(sel[0])
-        show_details(name)
-        update_buttons_state()
+        selected_index = selected_indices[0]          # одинарний вибір
+        selected_recipe_name = listbox.get(selected_index)
+        f_show_details(selected_recipe_name)
+        f_update_buttons_state()
 
-    listbox.bind("<<ListboxSelect>>", on_select)              # реагуємо на зміну вибору
-    listbox.bind("<Double-1>", lambda e: f_edit_rezept())     # ← NEW: двоклік = редагувати
-    root.bind("<Delete>", lambda e: f_delete_rezept())        # ← NEW: клавіша Delete = видалити
+    # лише вибір у списку (без Double-Click і без Delete-клавіші)
+    listbox.bind("<<ListboxSelect>>", f_on_select)
 
-    # ---- Дії: додати / видалити / редагувати ------------------------------
+    # ---------------- Команди кнопок ---------------------------------------
+    def f_do_filter(_event=None):
+        """Застосувати фільтр за назвою або списком інгредієнтів."""
+        query = query_var.get().strip()
+        mode = mode_var.get()
+        names = f_all_names_sorted()
+
+        if not query:
+            f_refresh_list(names)
+            if listbox.size():
+                listbox.selection_set(0)
+                f_on_select()
+            return
+
+        if mode == "name":
+            ql = query.lower()
+            filtered = [n for n in names if ql in n.lower()]
+        else:
+            # по інгредієнтах: усі введені мають бути в рецепті
+            wanted = [z.strip().lower() for z in query.split(",") if z.strip()]
+            if not wanted:
+                f_refresh_list(names)
+                if listbox.size():
+                    listbox.selection_set(0)
+                    f_on_select()
+                return
+
+            def f_has_all(nm):
+                det = all_recipes.get(nm, {})
+                zlist = [z.lower() for z in det.get("zutaten", [])]
+                return all(w in zlist for w in wanted)
+
+            filtered = [n for n in names if f_has_all(n)]
+
+        f_refresh_list(filtered)
+        if listbox.size():
+            listbox.selection_set(0)
+            f_on_select()
+
+    def f_show_all():
+        """Скинути фільтр і показати всі рецепти."""
+        query_var.set("")
+        f_refresh_list(f_all_names_sorted())
+        if listbox.size():
+            listbox.selection_set(0)
+            f_on_select()
 
     def f_add_rezept():
-        """Додати новий рецепт (діалогове вікно)."""
+        """Додати новий порожній рецепт (тільки назву)."""
         top = tk.Toplevel(root)
         top.title("Neues Rezept")
-        top.geometry("300x250")
+        top.geometry("320x220")
 
         ttk.Label(top, text="Rezeptname eingeben:").pack(pady=10)
+        entry_name = ttk.Entry(top, width=30)
+        entry_name.pack(pady=10)
+        entry_name.focus_set()
 
-        entry = ttk.Entry(top, width=30)
-        entry.pack(pady=10)
-        entry.focus_set()                                     # ← NEW: фокус одразу в поле
-        top.bind("<Return>", lambda e: f_save_rezept())       # ← NEW: Enter = зберегти
+        def f_save_new():
+            name = entry_name.get().strip().title()
+            if not name:
+                top.destroy()
+                return
+            ok, msg = f.f_validate_recipe_name(name)
+            if not ok:
+                messagebox.showwarning("Ungültiger Name", msg, parent=top)
+                return
+            if name in all_recipes:
+                messagebox.showinfo("Hinweis", f"„{name}“ existiert bereits.", parent=top)
+                return
 
-        def f_save_rezept():
-            name = entry.get().strip()
-            if name:
-                listbox.insert(tk.END, name)
-                # створюємо пусті деталі, щоб можна було відразу редагувати
-                all_recipes.setdefault(name, {"zutaten": [], "zubereitung": ""})
+            all_recipes[name] = {"zutaten": [], "zubereitung": ""}
+            if not _save_recipes_from(all_recipes):
+                messagebox.showerror("Fehler", "Speichern fehlgeschlagen.")
+            f_show_all()
 
-                # виділяємо щойно доданий елемент, прокручуємо до нього, показуємо деталі
-                last = listbox.size() - 1                     # ← NEW
-                listbox.selection_clear(0, tk.END)            # ← NEW
-                listbox.selection_set(last)                   # ← NEW
-                listbox.see(last)                             # ← NEW
-                listbox.event_generate("<<ListboxSelect>>")   # ← NEW
-                update_buttons_state()                        # ← NEW
-
+            # виділити новий елемент
+            for i in range(listbox.size()):
+                if listbox.get(i) == name:
+                    listbox.selection_clear(0, tk.END)
+                    listbox.selection_set(i)
+                    listbox.see(i)
+                    f_on_select()
+                    break
             top.destroy()
 
-        ttk.Button(top, text="Speichern", command=f_save_rezept).pack(pady=10)
+        ttk.Button(top, text="Speichern", command=f_save_new).pack(pady=10)
 
     def f_delete_rezept():
-        """Видалити обраний рецепт."""
+        """Видалити вибраний рецепт."""
         sel = listbox.curselection()
         if not sel:
             return
-
         name = listbox.get(sel[0])
-        all_recipes.pop(name, None)                               # 1) прибираємо з dict
-
-        idx = sel[0]
-        listbox.delete(idx)                                   # 2) прибираємо зі списку
-
-        # 3) підбираємо новий вибір або чистимо панель
-        new_size = listbox.size()
-        if new_size > 0:
-            new_idx = min(idx, new_size - 1)                  # сусідній/останній
-            listbox.selection_set(new_idx)
-            listbox.see(new_idx)
-            listbox.event_generate("<<ListboxSelect>>")
-        else:
-            details.configure(state="normal")
-            details.delete("1.0", tk.END)
-            details.insert("1.0", "Wähle ein Rezept links, um Details anzuzeigen…")
-            details.configure(state="disabled")
-            update_buttons_state()
+        # if not messagebox.askyesno("Löschen", f"„{name}“ wirklich löschen?"): return
+        all_recipes.pop(name, None)
+        if not _save_recipes_from(all_recipes):
+            messagebox.showerror("Fehler", "Speichern fehlgeschlagen.")
+        f_do_filter()   # оновити список відповідно до активного фільтру
 
     def f_edit_rezept():
-        """Редагувати обраний рецепт (інгредієнти + інструкція)."""
+        """Діалог редагування інгредієнтів і інструкції (без скролів і стрілок)."""
         sel = listbox.curselection()
         if not sel:
             return
-
         name = listbox.get(sel[0])
         data = all_recipes.get(name, {"zutaten": [], "zubereitung": ""})
 
         top = tk.Toplevel(root)
         top.title(f"Rezept bearbeiten — {name}")
-        top.geometry("420x360")
+        top.geometry("900x520")
 
-        ttk.Label(top, text="Zutaten (durch Kommata):").pack(pady=(12, 6))
-        entry_zutaten = ttk.Entry(top, width=50)
-        entry_zutaten.pack(pady=(0, 10))
-        entry_zutaten.insert(0, ", ".join(data.get("zutaten", [])))
+        # простий двоколонковий макет
+        top.columnconfigure(0, weight=1)
+        top.columnconfigure(1, weight=2)
+        top.rowconfigure(1, weight=1)
 
-        ttk.Label(top, text="Zubereitung:").pack(pady=(10, 6))
-        txt_zub = tk.Text(top, wrap="word", height=10)
-        txt_zub.pack(fill="both", expand=True, padx=6, pady=(0, 10))
+        ttk.Label(top, text="Zutaten:").grid(row=0, column=0, sticky="w", padx=8, pady=(8, 4))
+        ttk.Label(top, text="Zubereitung:").grid(row=0, column=1, sticky="w", padx=8, pady=(8, 4))
+
+        # інгредієнти —
+        ing_wrap = ttk.Frame(top)
+        ing_wrap.grid(row=1, column=0, sticky="nsew", padx=8)
+        ing_wrap.rowconfigure(0, weight=1)
+        ing_wrap.columnconfigure(0, weight=1)
+
+        lb_ing = tk.Listbox(ing_wrap, font=("Arial", 11))
+        lb_ing.grid(row=0, column=0, sticky="nsew")
+
+        for z in data.get("zutaten", []):
+            lb_ing.insert(tk.END, z)
+
+        # додавання / видалення
+        row2 = ttk.Frame(ing_wrap)
+        row2.grid(row=1, column=0, sticky="ew", pady=(8, 0))
+        row2.columnconfigure(0, weight=1)
+
+        new_var = tk.StringVar()
+        ent_new = ttk.Entry(row2, textvariable=new_var, width=20)
+        ent_new.grid(row=0, column=0, sticky="ew")
+
+        btn_add_ing  = ttk.Button(row2, text="Hinzufügen")
+        btn_del_sel  = ttk.Button(row2, text="Ausgewählte löschen")
+        btn_add_ing.grid(row=0, column=1, padx=(8, 0))
+        btn_del_sel.grid(row=1, column=0, sticky="w", pady=(6, 0))
+
+        def f_do_add_ing():
+            """Додати один інгредієнт із поля нижче списку."""
+            txt = new_var.get().strip().title()
+            if not txt:
+                return
+            ok, msg = f.f_validate_ingredients_list([txt])
+            if not ok:
+                messagebox.showwarning("Ungültige Zutat", msg, parent=top)
+                return
+            current = [lb_ing.get(i) for i in range(lb_ing.size())]
+            if txt in current:
+                return
+            lb_ing.insert(tk.END, txt)
+            new_var.set("")
+            lb_ing.see(tk.END)
+
+        def f_do_del_selected():
+            """Видалити всі виділені інгредієнти зі списку."""
+            for i in reversed(lb_ing.curselection()):
+                lb_ing.delete(i)
+
+        btn_add_ing.configure(command=f_do_add_ing)
+        btn_del_sel.configure(command=f_do_del_selected)
+        ent_new.bind("<Return>", lambda _e=None: f_do_add_ing())  # Enter додає (ця bind не обов'язкова)
+
+        # інструкція
+        txt_zub = tk.Text(top, wrap="word", font=("Arial", 11))
+        txt_zub.grid(row=1, column=1, sticky="nsew", padx=(0, 8))
         txt_zub.insert("1.0", data.get("zubereitung", ""))
 
-        def save_changes():
-            raw = entry_zutaten.get().strip()
-            zutaten_list = [z.strip() for z in raw.split(",") if z.strip()]
+        # низ діалогу
+        bar = ttk.Frame(top)
+        bar.grid(row=2, column=0, columnspan=2, pady=10)
+        btn_cancel = ttk.Button(bar, text="Abbrechen", command=top.destroy)
+        btn_save   = ttk.Button(bar, text="Speichern")
+        btn_cancel.pack(side="right", padx=6)
+        btn_save.pack(side="right")
+
+        def f_save_changes():
+            """Зібрати дані з віджетів, провалідувати та зберегти."""
+            zutaten_list = [lb_ing.get(i) for i in range(lb_ing.size())]
             zub_text = txt_zub.get("1.0", tk.END).strip()
 
-            all_recipes[name] = {"zutaten": zutaten_list, "zubereitung": zub_text}
+            ok, msg = f.f_validate_ingredients_list(zutaten_list)
+            if not ok:
+                messagebox.showwarning("Ungültige Zutaten", msg, parent=top)
+                return
 
-            # якщо цей рецепт обраний — перерисувати деталі
+            all_recipes[name] = {"zutaten": zutaten_list, "zubereitung": zub_text}
+            if not _save_recipes_from(all_recipes):
+                messagebox.showerror("Fehler", "Speichern fehlgeschlagen.", parent=top)
+                return
+
+            # якщо цей рецепт обраний — оновити панель деталей
             cur = listbox.curselection()
             if cur and listbox.get(cur[0]) == name:
-                show_details(name)
-
-            update_buttons_state()                            # ← NEW
+                f_show_details(name)
             top.destroy()
 
-        ttk.Button(top, text="Speichern", command=save_changes).pack(pady=(0, 10))
+        btn_save.configure(command=f_save_changes)
 
-    # призначаємо команди на кнопки (тепер функції вже визначені)
+    def f_reload():
+        """Перечитати rezepte.json і перебудувати список згідно фільтру."""
+        all_recipes.clear()
+        _load_recipes_into(all_recipes)
+        f_do_filter()
+
+    def f_exit():
+        """Закрити програму."""
+        root.destroy()
+
+    # прив’язки кнопок
+    btn_filter.configure(command=f_do_filter)
+    btn_all.configure(command=f_show_all)
     btn_add.configure(command=f_add_rezept)
-    btn_edit.configure(command=f_edit_rezept, state="disabled")   # ← NEW: стартово вимкнено
-    btn_delete.configure(command=f_delete_rezept, state="disabled")# ← NEW: стартово вимкнено
+    btn_edit.configure(command=f_edit_rezept, state="disabled")
+    btn_delete.configure(command=f_delete_rezept, state="disabled")
+    btn_reload.configure(command=f_reload)
+    btn_exit.configure(command=f_exit)
+    entry.bind("<Return>", f_do_filter)   # Enter у полі пошуку
 
-    # --- Початковий вибір / початковий стан кнопок -------------------------
-    if listbox.size() > 0:                                        # ← NEW
+    # старт: виділити перший елемент або просто оновити стан кнопок
+    if listbox.size():
         listbox.selection_set(0)
-        listbox.event_generate("<<ListboxSelect>>")
+        f_on_select()
     else:
-        update_buttons_state()
+        f_update_buttons_state()
 
-    root.mainloop()   # запуск головного циклу
+    root.mainloop()
 
 
 if __name__ == "__main__":

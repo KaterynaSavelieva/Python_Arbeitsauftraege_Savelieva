@@ -26,7 +26,8 @@ while True:
         case "G":
             f_edit_recipe(all_recipes)
         case "Q":
-            print("Auf Wiedersehen!!")
+            f_save_changes(all_recipes)
+            print("Auf Wiedersehen!")
             break
         case _:
             print("Ungültige Eingabe. Bitte A, B, C, D, E, F, G oder Q wählen.")

@@ -13,7 +13,7 @@ from tabulate import tabulate
 def f_print_all_recipes(recipes):             # Parameter: recipes (zeigt z. B. auf all_recipes)
     f_print_title("📖👩‍🍳 Alle Rezepte:")
     table=[]
-    for name, details in recipes.items():     # Variable name = Schlüssel, details = Value
+    for name, details in sorted(recipes.items()):     # Variable name = Schlüssel, details = Value
         #print(f"🍴 {name}")  # Rezeptname
         #print(f"   Zutaten: {', '.join(details['zutaten'])}")   # Variable details
         #print(f"   Zubereitung: {details['zubereitung']}\n")    # Variable details
@@ -30,8 +30,8 @@ def f_show_menu()-> str:
     print("C - Neues Rezept hinzufügen➕")
     print("D - Rezept löschen🫳🫳🫳")
     print("E - Rezepte speichern📘📘")
-    print("G - Rezepte bearbeiten✍️✍️")
     print("F - Rezepte laden🙌")
+    print("G - Rezepte bearbeiten✍️✍️")
     print("Q - Beenden🫡")
     return input ("Wählen Sie: ").strip().upper()
 
@@ -105,7 +105,7 @@ def f_delete_ingredients(all_recipes:dict, recipe_change:str) -> None:
     if not_found:
         print(f"Nicht gefunden: {','.join(not_found)}")
     f_print_all_recipes({recipe_change: all_recipes[recipe_change]})
-    f_wait_for_enter()
+    #f_wait_for_enter()
 
 def f_print_matches(matches: dict[str, dict]) -> None:
     if matches:
@@ -145,17 +145,29 @@ def f_delete_recipe(all_recipes: dict[str, dict]) -> None:
     if name in all_recipes:
         del all_recipes[name]  # aus RAM löschen
         print(f"Das Rezept '{name}' wurde gelöscht.\n")
+        f_save_changes(all_recipes)
 
-        save=input("Möchten Sie Änderung speichern? Y/N\n").strip().title()
-        if save == "Y":
-            if f_save_recipes(all_recipes):#, delete= [name]
-#f_save_recipes(...) gibt True zurück, wenn das Speichern ohne Fehler geklappt hat.
-# (z. B. Datei gesperrt, kein Speicherplatz, kaputte JSON-Datei) -False=
-                print(f"Rezept {name} wurde gelöscht und gespeichert")
-            else:
-                print("Änderung wurde noch nicht gespeichert")
+#         save=input("Möchten Sie Änderung speichern? Y/N\n").strip().title()
+#         if save == "Y":
+#             if f_save_recipes(all_recipes):#, delete= [name]
+# #f_save_recipes(...) gibt True zurück, wenn das Speichern ohne Fehler geklappt hat.
+# # (z. B. Datei gesperrt, kein Speicherplatz, kaputte JSON-Datei) -False=
+#                 print(f"Rezept {name} wurde gelöscht und gespeichert")
+#             else:
+#                 print("Änderung wurde noch nicht gespeichert")
     else:
         print(f"Kein Rezept mit dem Namen '{name}' gefunden.")
+
+def f_save_changes(all_recipes: dict[str, dict]) -> None:
+    save = input("Möchten Sie Änderung speichern? Y/N\n").strip().title()
+    if save == "Y":
+        if f_save_recipes(all_recipes):  # , delete= [name]
+            # f_save_recipes(...) gibt True zurück, wenn das Speichern ohne Fehler geklappt hat.
+            # (z. B. Datei gesperrt, kein Speicherplatz, kaputte JSON-Datei) -False=
+            print(f"Änderung wurde gespeichert")
+    else:
+        print("Änderung wurde noch nicht gespeichert")
+
 
 def f_check_length(value: str, min_len: int, max_len: int) -> tuple[bool, str]:
     if not (min_len <= len(value) <= max_len):
@@ -266,10 +278,39 @@ def f_edit_recipe(all_recipes:dict)->None:
     f_wait_for_enter()
 
 def f_wait_for_enter() -> None:
-    input("\nDrücken Sie ENTER, um fortzufahren...")
+    input("\nDrücken Sie ENTER, um fortzufahren...\n")
 
 def f_print_title(text: str) -> None:
     breit =70
     print(f"{YELLOW}\n{'='*breit}{RESET}")
     print(BOLD+BLUE+text.center(breit)+RESET)
     print(f"{YELLOW}{'='*breit}{RESET}")
+
+
+
+# --- GUI-friendly wrappers (нічого не друкують, не чекають ENTER) ---
+
+def f_load_recipes_silent(all_recipes: dict) -> bool:
+    """Як f_load_recipes, але без print і без очікування ENTER."""
+    import json
+    try:
+        with open("rezepte.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            all_recipes.update(data)
+        return True
+    except FileNotFoundError:
+        return False
+    except json.JSONDecodeError:
+        return False
+    except Exception:
+        return False
+
+def f_save_recipes_silent(all_recipes: dict) -> bool:
+    """Як f_save_recipes, але точно без друку."""
+    try:
+        with open("rezepte.json", "w", encoding="utf-8") as f:
+            import json
+            json.dump(all_recipes, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
