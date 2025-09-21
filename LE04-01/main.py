@@ -1,21 +1,7 @@
 from functions_new import*
 f_print_title("Herzlich Willkommen beim Rezepte-Manager der Welt!")
+from data  import *
 
-# Dictionary mit allen Rezepten  →  Variable (global)
-all_recipes = {
-    "Pizza": {
-        "zutaten": ["Mehl", "eier", "Teig", "Tomatensauce", "Käse"],
-        "zubereitung": "Die Zutaten auf den Teig legen und im Ofen backen."
-    },
-    "Salat": {
-        "zutaten": ["Tomaten", "Gurken", "Olivenöl"],
-        "zubereitung": "Alles klein schneiden und mit Olivenöl mischen."
-    },
-    "Pfannkuchen": {
-        "zutaten": ["Mehl", "Milch", "Eier"],
-        "zubereitung": "Teig anrühren und in einer Pfanne ausbacken."
-    }
-}
 
 all_recipes = f_load_recipes(all_recipes)
 # --- Hauptprogramm ---

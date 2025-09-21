@@ -44,9 +44,9 @@ def f_input_ingredients() -> list[str]:
             return ingredients_list
         print(f"Fehler: {msg}")
 
-def f_match_ingredients(recipe_ingredients: dict[str, dict], ingredients_list: list[str]) -> dict[str, dict]:
+def f_match_ingredients(recipe: dict[str, dict], ingredients_list: list[str]) -> dict[str, dict]:
     match_ingredients: dict[str, dict] = {}
-    for name, details in recipe_ingredients.items():
+    for name, details in recipe.items():
         details_lower_case = [z.lower() for z in details['zutaten']]
 
         # Prüfen, ob alle gesuchten Zutaten im Rezept vorkommen
