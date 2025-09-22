@@ -7,14 +7,13 @@ from data import all_recipes       # початкові рецепти в RAM
 
 
 # --------- тихі обгортки для файлу -----------------------------------------
-def f_load_all_recipes() -> bool:
+def f_load_all_recipes():
     """Завантажити всі рецепти з rezepte.json у all_recipes (без пауз/print)."""
     return f.f_load_recipes_silent(all_recipes)
 
-def f_save_all_recipe() -> bool:
+def f_save_all_recipe():
     """Зберегти всі рецепти з all_recipes у rezepte.json (тихо)."""
     return f.f_save_recipes_silent(all_recipes)
-
 
 # ============================== GUI ========================================
 def run_gui():
