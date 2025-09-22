@@ -1,25 +1,21 @@
-import json
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 import functions_new as f          # валідатори + робота з JSON
 from data import all_recipes       # початкові рецепти в RAM
 
-
 # --------- тихі обгортки для файлу -----------------------------------------
 def f_load_all_recipes():
-    """Завантажити всі рецепти з rezepte.json у all_recipes (без пауз/print)."""
     return f.f_load_recipes_silent(all_recipes)
 
 def f_save_all_recipe():
-    """Зберегти всі рецепти з all_recipes у rezepte.json (тихо)."""
     return f.f_save_recipes_silent(all_recipes)
 
 # ============================== GUI ========================================
 def run_gui():
     root = tk.Tk()
-    root.title("Rezepte")
-    root.geometry("1000x600")
+    root.title("Rezepte-Manager")
+    root.geometry("800x600")
 
     # каркас 2 колонки у пропорції 2:3
     main = ttk.Frame(root, padding=20)
@@ -91,7 +87,7 @@ def run_gui():
     right = ttk.Frame(main)
     right.grid(row=0, column=1, sticky="nsew")
     ttk.Label(right, text="Details", font=("Arial", 16, "bold")).pack(anchor="w")
-    details = tk.Text(right, wrap="word", font=("Arial", 12), state="disabled")
+    details = tk.Text(right, wrap="word", font=("Arial", 10), state="disabled")
     details.pack(fill="both", expand=True, pady=(6, 0))
 
 
@@ -113,7 +109,7 @@ def run_gui():
 
     # ---------------- ЄДИНИЙ потрібний обробник вибору ---------------------
     def f_on_select(_event=None):
-        """Користувач вибрав елемент у Listbox (одиночний вибір)."""
+        #Користувач вибрав елемент у Listbox (одиночний вибір).
         sel = listbox.curselection()
         if not sel:
             return
@@ -147,10 +143,9 @@ def run_gui():
     # Виклик на старті: показати всі рецепти (відсортовані по алфавіту)
     f_rebuild_and_select_first(f_all_names_sorted())
 
-
     # ---------------- Команди кнопок ---------------------------------------
     def f_do_filter(_event=None):
-        """Застосувати фільтр за назвою або списком інгредієнтів."""
+        #Застосувати фільтр за назвою або списком інгредієнтів.
         query = query_var.get().strip()
         names = f_all_names_sorted()
 
@@ -176,12 +171,12 @@ def run_gui():
         f_rebuild_and_select_first(filtered)
 
     def f_show_all():
-        """Скинути фільтр і показати всі рецепти."""
+        #Скинути фільтр і показати всі рецепти
         query_var.set("")
         f_rebuild_and_select_first(f_all_names_sorted())
 
     def f_add_rezept():
-        """Додати новий порожній рецепт (тільки назву)."""
+        #Додати новий порожній рецепт (тільки назву).
         top = tk.Toplevel(root)
         top.title("Neues Rezept")
         top.geometry("320x220")
@@ -222,7 +217,7 @@ def run_gui():
         ttk.Button(top, text="Speichern", command=f_save_new).pack(pady=10)
 
     def f_delete_rezept():
-        """Видалити обраний рецепт (з підтвердженням)."""
+        #Видалити обраний рецепт (з підтвердженням).
         sel = listbox.curselection()
         if not sel:
             return
@@ -235,7 +230,7 @@ def run_gui():
         f_do_filter()  # перебудувати список відповідно до активного фільтру
 
     def f_edit_rezept():
-        """Діалог редагування інгредієнтів і інструкції."""
+        #Діалог редагування інгредієнтів і інструкції
         sel = listbox.curselection()
         if not sel:
             return
@@ -281,7 +276,7 @@ def run_gui():
         btn_del_sel.grid(row=1, column=0, sticky="w", pady=(6, 0))
 
         def f_do_add_ing():
-            """Додати один інгредієнт із поля нижче списку."""
+            #Додати один інгредієнт із поля нижче списку.
             txt = new_var.get().strip().title()
             if not txt:
                 return
@@ -297,7 +292,7 @@ def run_gui():
             lb_ing.see(tk.END)
 
         def f_do_del_selected():
-            """Видалити всі виділені інгредієнти зі списку."""
+            #Видалити всі виділені інгредієнти зі списку.
             for i in reversed(lb_ing.curselection()):
                 lb_ing.delete(i)
 
@@ -322,16 +317,16 @@ def run_gui():
         btn_save.pack(side="right")
 
         def f_save_changes():
-            """Зібрати дані з віджетів, провалідувати та зберегти."""
-            zutaten_list = [lb_ing.get(i) for i in range(lb_ing.size())]
-            zub_text = txt_zub.get("1.0", tk.END).strip()
+            #Зібрати дані з віджетів, провалідувати та зберегти.
+            ingredients = [lb_ing.get(i) for i in range(lb_ing.size())]
+            instruction = txt_zub.get("1.0", tk.END).strip()
 
-            ok, msg = f.f_validate_ingredients_list(zutaten_list)
+            ok, msg = f.f_validate_ingredients_list(ingredients)
             if not ok:
                 messagebox.showwarning("Ungültige Zutaten", msg, parent=top)
                 return
 
-            all_recipes[name] = {"zutaten": zutaten_list, "zubereitung": zub_text}
+            all_recipes[name] = {"zutaten": ingredients, "zubereitung": instruction}
             if not f_save_all_recipe():
                 messagebox.showerror("Fehler", "Speichern fehlgeschlagen.", parent=top)
                 return
@@ -345,7 +340,7 @@ def run_gui():
         btn_save.configure(command=f_save_changes)
 
     def f_reload():
-        """Перечитати rezepte.json і перебудувати список згідно фільтру."""
+        #Перечитати rezepte.json і перебудувати список згідно фільтру
         all_recipes.clear()
         f_load_all_recipes()
         f_do_filter()
@@ -364,7 +359,6 @@ def run_gui():
     entry.bind("<Return>", f_do_filter)   # Enter у полі пошуку
 
     root.mainloop()
-
 
 if __name__ == "__main__":
     run_gui()
