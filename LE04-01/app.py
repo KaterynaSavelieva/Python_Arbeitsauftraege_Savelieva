@@ -7,14 +7,14 @@ from data import all_recipes       # початкові рецепти в RAM
 
 
 # --------- тихі обгортки для файлу -----------------------------------------
-def f_load_all_recipes():
-    """Завантажити всі рецепти з rezepte.json у словник all_recipes"""
+def f_load_all_recipes() -> bool:
+    """Завантажити всі рецепти з rezepte.json у all_recipes (без пауз/print)."""
     return f.f_load_recipes_silent(all_recipes)
 
-
-def f_save_all_recipe():
-    """Зберегти всі рецепти з all_recipes у rezepte.json"""
+def f_save_all_recipe() -> bool:
+    """Зберегти всі рецепти з all_recipes у rezepte.json (тихо)."""
     return f.f_save_recipes_silent(all_recipes)
+
 
 # ============================== GUI ========================================
 def run_gui():
@@ -60,7 +60,7 @@ def run_gui():
     btn_all.grid(row=1, column=3, padx=(6, 0))
 
     # список рецептів
-    listbox = tk.Listbox(left, font=("Arial", 12, "italic"))
+    listbox = tk.Listbox(left, font=("Arial", 10, "italic"))
     listbox.grid(row=2, column=0, sticky="nsew")
 
     # статус під списком
@@ -95,39 +95,10 @@ def run_gui():
     details = tk.Text(right, wrap="word", font=("Arial", 12), state="disabled")
     details.pack(fill="both", expand=True, pady=(6, 0))
 
-    # ---------------- Дані у список ----------------------------------------
-    f_load_all_recipes()
-
-    def f_all_names_sorted():
-        """
-        Допоміжна функція.
-        Повертає всі назви рецептів (ключі словника all_recipes),
-        відсортовані у алфавітному порядку (без врахування регістру).
-        Використовується, щоб список рецептів у вікні завжди був охайно відсортований.
-        """
-        # str.casefold()— кращий за lower() для алфавітів із умлаутами тощо
-        return sorted(all_recipes.keys(), key=str.casefold)
-
-    def f_refresh_list(names):
-        """Оновлює список рецептів у Listbox зліва + рядок статусу."""
-        listbox.delete(0, tk.END)
-        for n in names:
-            listbox.insert(tk.END, n)
-        status_var.set(f"Angezeigt: {len(names)} von {len(all_recipes)}")
-
-    # Виклик на старті: показати всі рецепти (відсортовані по алфавіту)
-    f_refresh_list(f_all_names_sorted())
 
     # ---------------- Утиліти ----------------------------------------------
-    def f_update_buttons_state():
-        # Ця функція робить кнопки активними лише тоді, коли в списку рецептів щось вибрано.
-        there_is_selection = bool(listbox.curselection())
-        new_state = "normal" if there_is_selection else "disabled"
-        btn_edit.configure(state=new_state)
-        btn_delete.configure(state=new_state)
-
     def f_show_details(name):
-        """Заповнює праву панель деталями обраного рецепта."""
+        # Заповнює праву панель деталями обраного рецепта.
         data = all_recipes.get(name)
         details.configure(state="normal")
         details.delete("1.0", tk.END)
@@ -141,67 +112,74 @@ def run_gui():
 
         details.configure(state="disabled")
 
-    # ---------------- Обробник єдиної потрібної події ----------------------
+    # ---------------- ЄДИНИЙ потрібний обробник вибору ---------------------
     def f_on_select(_event=None):
-        """Користувач вибрав елемент у Listbox."""
-        selected_indices = listbox.curselection()
-        if not selected_indices:
-            f_update_buttons_state()
+        """Користувач вибрав елемент у Listbox (одиночний вибір)."""
+        sel = listbox.curselection()
+        if not sel:
             return
-        selected_index = selected_indices[0]          # одинарний вибір
-        selected_recipe_name = listbox.get(selected_index)
-        f_show_details(selected_recipe_name)
-        f_update_buttons_state()
+        selected_name = listbox.get(sel[0])
+        f_show_details(selected_name)
 
-    # лише вибір у списку (без Double-Click і без Delete-клавіші)
     listbox.bind("<<ListboxSelect>>", f_on_select)
+
+    # ---------------- Дані у список ----------------------------------------
+    f_load_all_recipes()
+
+    def f_all_names_sorted():
+        # str.casefold() — кращий за lower() для алфавітів із умлаутами тощо
+        return sorted(all_recipes.keys(), key=str.casefold)
+
+    def f_refresh_list(names):
+        # Оновлює список рецептів у Listbox зліва + рядок статусу.
+        listbox.delete(0, tk.END)
+        for n in names:
+            listbox.insert(tk.END, n)
+        status_var.set(f"Angezeigt: {len(names)} von {len(all_recipes)}")
+
+    def f_rebuild_and_select_first(names):
+        # Намалювати список і, якщо не порожній, виділити перший та показати деталі.
+        f_refresh_list(names)
+        if listbox.size():
+            listbox.selection_clear(0, tk.END)
+            listbox.selection_set(0)
+            f_on_select()
+
+    # Виклик на старті: показати всі рецепти (відсортовані по алфавіту)
+    f_rebuild_and_select_first(f_all_names_sorted())
+
 
     # ---------------- Команди кнопок ---------------------------------------
     def f_do_filter(_event=None):
         """Застосувати фільтр за назвою або списком інгредієнтів."""
         query = query_var.get().strip()
-        mode = mode_var.get()
         names = f_all_names_sorted()
 
         if not query:
-            f_refresh_list(names)
-            if listbox.size():
-                listbox.selection_set(0)
-                f_on_select()
-            return
+            return f_rebuild_and_select_first(names)
 
-        if mode == "name":
-            ql = query.lower()
-            filtered = [n for n in names if ql in n.lower()]
-        else:
-            # по інгредієнтах: усі введені мають бути в рецепті
-            wanted = [z.strip().lower() for z in query.split(",") if z.strip()]
-            if not wanted:
-                f_refresh_list(names)
-                if listbox.size():
-                    listbox.selection_set(0)
-                    f_on_select()
-                return
+        if mode_var.get() == "name":
+            q = query.lower()
+            filtered = [n for n in names if q in n.lower()]
+            return f_rebuild_and_select_first(filtered)
 
-            def f_has_all(nm):
-                det = all_recipes.get(nm, {})
-                zlist = [z.lower() for z in det.get("zutaten", [])]
-                return all(w in zlist for w in wanted)
+        # пошук за інгредієнтами (усі введені мають бути в рецепті)
+        wanted = [z.strip().lower() for z in query.split(",") if z.strip()]
+        if not wanted:
+            return f_rebuild_and_select_first(names)
 
-            filtered = [n for n in names if f_has_all(n)]
+        filtered = []
+        for n in names:
+            zlist = [z.lower() for z in all_recipes.get(n, {}).get("zutaten", [])]
+            if all(w in zlist for w in wanted):
+                filtered.append(n)
 
-        f_refresh_list(filtered)
-        if listbox.size():
-            listbox.selection_set(0)
-            f_on_select()
+        f_rebuild_and_select_first(filtered)
 
     def f_show_all():
         """Скинути фільтр і показати всі рецепти."""
         query_var.set("")
-        f_refresh_list(f_all_names_sorted())
-        if listbox.size():
-            listbox.selection_set(0)
-            f_on_select()
+        f_rebuild_and_select_first(f_all_names_sorted())
 
     def f_add_rezept():
         """Додати новий порожній рецепт (тільки назву)."""
@@ -228,7 +206,7 @@ def run_gui():
                 return
 
             all_recipes[name] = {"zutaten": [], "zubereitung": ""}
-            if not f_save_all_recipe(all_recipes):
+            if not f_save_all_recipe():
                 messagebox.showerror("Fehler", "Speichern fehlgeschlagen.")
             f_show_all()
 
@@ -245,19 +223,20 @@ def run_gui():
         ttk.Button(top, text="Speichern", command=f_save_new).pack(pady=10)
 
     def f_delete_rezept():
-        """Видалити вибраний рецепт."""
+        """Видалити обраний рецепт (з підтвердженням)."""
         sel = listbox.curselection()
         if not sel:
             return
         name = listbox.get(sel[0])
-        # if not messagebox.askyesno("Löschen", f"„{name}“ wirklich löschen?"): return
+        if not messagebox.askyesno("Löschen", f"„{name}“ wirklich löschen?"):
+            return
         all_recipes.pop(name, None)
         if not f_save_all_recipe():
             messagebox.showerror("Fehler", "Speichern fehlgeschlagen.")
-        f_do_filter()   # оновити список відповідно до активного фільтру
+        f_do_filter()  # перебудувати список відповідно до активного фільтру
 
     def f_edit_rezept():
-        """Діалог редагування інгредієнтів і інструкції (без скролів і стрілок)."""
+        """Діалог редагування інгредієнтів і інструкції."""
         sel = listbox.curselection()
         if not sel:
             return
@@ -269,14 +248,14 @@ def run_gui():
         top.geometry("900x520")
 
         # простий двоколонковий макет
-        top.columnconfigure(0, weight=1)
-        top.columnconfigure(1, weight=2)
+        top.columnconfigure(0, weight=1, uniform="col")
+        top.columnconfigure(1, weight=2, uniform="col")
         top.rowconfigure(1, weight=1)
 
         ttk.Label(top, text="Zutaten:").grid(row=0, column=0, sticky="w", padx=8, pady=(8, 4))
         ttk.Label(top, text="Zubereitung:").grid(row=0, column=1, sticky="w", padx=8, pady=(8, 4))
 
-        # інгредієнти —
+        # інгредієнти — без стрілок і скролів
         ing_wrap = ttk.Frame(top)
         ing_wrap.grid(row=1, column=0, sticky="nsew", padx=8)
         ing_wrap.rowconfigure(0, weight=1)
@@ -323,9 +302,12 @@ def run_gui():
             for i in reversed(lb_ing.curselection()):
                 lb_ing.delete(i)
 
+        def f_add_ing_on_enter(_e=None):
+            f_do_add_ing()
+
         btn_add_ing.configure(command=f_do_add_ing)
         btn_del_sel.configure(command=f_do_del_selected)
-        ent_new.bind("<Return>", lambda _e=None: f_do_add_ing())  # Enter додає (ця bind не обов'язкова)
+        ent_new.bind("<Return>", f_add_ing_on_enter)  # Enter додає
 
         # інструкція
         txt_zub = tk.Text(top, wrap="word", font=("Arial", 11))
@@ -370,25 +352,17 @@ def run_gui():
         f_do_filter()
 
     def f_exit():
-        """Закрити програму."""
-        root.destroy()
+        root.destroy()  # Закрити програму
 
     # прив’язки кнопок
     btn_filter.configure(command=f_do_filter)
     btn_all.configure(command=f_show_all)
     btn_add.configure(command=f_add_rezept)
-    btn_edit.configure(command=f_edit_rezept, state="disabled")
-    btn_delete.configure(command=f_delete_rezept, state="disabled")
+    btn_edit.configure(command=f_edit_rezept)
+    btn_delete.configure(command=f_delete_rezept)
     btn_reload.configure(command=f_reload)
     btn_exit.configure(command=f_exit)
     entry.bind("<Return>", f_do_filter)   # Enter у полі пошуку
-
-    # старт: виділити перший елемент або просто оновити стан кнопок
-    if listbox.size():
-        listbox.selection_set(0)
-        f_on_select()
-    else:
-        f_update_buttons_state()
 
     root.mainloop()
 

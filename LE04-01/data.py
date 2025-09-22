@@ -1,4 +1,4 @@
-# Dictionary mit allen Rezepten  →  Variable (global)
+# Dictionary mit allen Rezepten
 all_recipes = {
     "Pizza": {
         "zutaten": ["Mehl", "Eier", "Teig", "Tomatensauce", "Käse"],
