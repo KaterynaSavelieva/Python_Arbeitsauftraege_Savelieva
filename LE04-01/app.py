@@ -7,27 +7,14 @@ from data import all_recipes       # початкові рецепти в RAM
 
 
 # --------- тихі обгортки для файлу -----------------------------------------
-def _load_recipes_into(target: dict) -> bool:
-    """Тихо підвантажити rezepte.json у target (без принтів/пауz)."""
-    if hasattr(f, "f_load_recipes_silent"):
-        return bool(f.f_load_recipes_silent(target))
-    try:
-        with open("rezepte.json", "r", encoding="utf-8") as fh:
-            data = json.load(fh)
-        if isinstance(data, dict):
-            target.update(data)
-            return True
-        return False
-    except Exception:
-        return False
+def f_load_all_recipes():
+    """Завантажити всі рецепти з rezepte.json у словник all_recipes"""
+    return f.f_load_recipes_silent(all_recipes)
 
 
-def _save_recipes_from(source: dict) -> bool:
-    """Тихо зберегти source у rezepte.json (True/False)."""
-    if hasattr(f, "f_save_recipes_silent"):
-        return bool(f.f_save_recipes_silent(source))
-    return bool(f.f_save_recipes(source))
-
+def f_save_all_recipe():
+    """Зберегти всі рецепти з all_recipes у rezepte.json"""
+    return f.f_save_recipes_silent(all_recipes)
 
 # ============================== GUI ========================================
 def run_gui():
@@ -109,7 +96,7 @@ def run_gui():
     details.pack(fill="both", expand=True, pady=(6, 0))
 
     # ---------------- Дані у список ----------------------------------------
-    _load_recipes_into(all_recipes)
+    f_load_all_recipes()
 
     def f_all_names_sorted():
         """
@@ -241,7 +228,7 @@ def run_gui():
                 return
 
             all_recipes[name] = {"zutaten": [], "zubereitung": ""}
-            if not _save_recipes_from(all_recipes):
+            if not f_save_all_recipe(all_recipes):
                 messagebox.showerror("Fehler", "Speichern fehlgeschlagen.")
             f_show_all()
 
@@ -265,7 +252,7 @@ def run_gui():
         name = listbox.get(sel[0])
         # if not messagebox.askyesno("Löschen", f"„{name}“ wirklich löschen?"): return
         all_recipes.pop(name, None)
-        if not _save_recipes_from(all_recipes):
+        if not f_save_all_recipe():
             messagebox.showerror("Fehler", "Speichern fehlgeschlagen.")
         f_do_filter()   # оновити список відповідно до активного фільтру
 
@@ -364,7 +351,7 @@ def run_gui():
                 return
 
             all_recipes[name] = {"zutaten": zutaten_list, "zubereitung": zub_text}
-            if not _save_recipes_from(all_recipes):
+            if not f_save_all_recipe():
                 messagebox.showerror("Fehler", "Speichern fehlgeschlagen.", parent=top)
                 return
 
@@ -379,7 +366,7 @@ def run_gui():
     def f_reload():
         """Перечитати rezepte.json і перебудувати список згідно фільтру."""
         all_recipes.clear()
-        _load_recipes_into(all_recipes)
+        f_load_all_recipes()
         f_do_filter()
 
     def f_exit():

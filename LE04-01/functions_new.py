@@ -286,10 +286,7 @@ def f_print_title(text: str) -> None:
     print(BOLD+BLUE+text.center(breit)+RESET)
     print(f"{YELLOW}{'='*breit}{RESET}")
 
-
-
 # --- GUI-friendly wrappers (нічого не друкують, не чекають ENTER) ---
-
 def f_load_recipes_silent(all_recipes: dict) -> bool:
     """Як f_load_recipes, але без print і без очікування ENTER."""
     import json
