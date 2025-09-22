@@ -38,7 +38,8 @@ def f_show_menu()-> str:
 def f_input_ingredients() -> list[str]:
     while True:
         ingredients_input = input("Bitte geben Sie die Zutaten ein:\n(getrennt durch Kommata)\n")
-        ingredients_list= [z.strip().title() for z in ingredients_input.split(",") if z.strip()]# direkt parsen: splitten, trimmen, Titelcase, leere Einträge filtern
+        ingredients_list= [z.strip().title() for z in ingredients_input.split(",") if z.strip()]
+        # direkt parsen: splitten, trimmen, Titelcase, leere Einträge filtern
         ok, msg = f_validate_ingredients_list(ingredients_list)# Validierung der Zutatenliste
         if ok:
             return ingredients_list
@@ -246,7 +247,7 @@ def f_load_recipes(all_recipes: dict) -> dict:
             data = json.load(f)
             # Neue Rezepte zu bestehendem Dictionary hinzufügen
             all_recipes.update(data)
-            print("\nRezepte wurden erfolgreich geladen (Datei: rezepte.json).")
+            print(f"{GREEN}\nRezepte wurden erfolgreich geladen (Datei: rezepte.json).{RESET}")
     except FileNotFoundError:
         # Wenn Datei nicht existiert
         print("Fehler: Die Datei rezepte.json wurde nicht gefunden.")

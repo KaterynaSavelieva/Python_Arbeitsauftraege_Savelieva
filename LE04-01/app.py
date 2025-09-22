@@ -60,7 +60,12 @@ def run_gui():
 
     # статус під списком
     status_var = tk.StringVar(value="")
-    ttk.Label(left, textvariable=status_var).grid(row=3, column=0, sticky="ew", pady=(6, 0))
+    # створюємо змінну типу StringVar — це спеціальна "обгортка" для рядків у Tkinter
+    # значення в ній можна змінювати, і воно автоматично оновлюється в Label
+    ttk.Label(
+        left,  # батьківський контейнер (рамка/вікно)
+        textvariable=status_var  # текст буде братися напряму з status_var
+    ).grid(row=3, column=0, sticky="ew",  pady=(6, 0))
 
     # блок кнопок
     buttons = ttk.Frame(left)
