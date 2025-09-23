@@ -1,0 +1,58 @@
+{
+  "Per Anhalter durch die Galaxis": {
+    "author": "Douglas Adams",
+    "year": 1979,
+    "available": true
+  },
+  "Herr der Ringe": {
+    "author": "J.R.R. Tolkien",
+    "year": 1954,
+    "available": true
+  },
+  "A Court of Thorns and Roses": {
+    "author": "Sarah J. Maas",
+    "year": 2015,
+    "available": false
+  },
+  "Qualityland": {
+    "author": "Marc-Uwe Kling",
+    "year": 2017,
+    "available": true
+  },
+  "Der Gotteswahn": {
+    "author": "Richard Dawkins",
+    "year": 2006,
+    "available": true
+  },
+  "RCE": {
+    "author": "Sibylle Berg",
+    "year": 2020,
+    "available": false
+  },
+  "Die Welle": {
+    "author": "Morton Rhue",
+    "year": 1981,
+    "available": true
+  },
+  "Clean Code": {
+    "author": "Robert C. Martin",
+    "year": 2008,
+    "available": true
+  },
+  "Fahrenheit 451": {
+    "author": "Ray Bradbury",
+    "year": 1953,
+    "available": false
+  },
+  "Der kleine Prinz": {
+    "author": "Antoine de Saint-Exupéry",
+    "year": 1943,
+    "available": true
+  },
+  "aaa": {
+    "author": "Aaa Sss",
+    "year": 2000,
+    "available": "True"
+  },
+  "available": "True"
+}
