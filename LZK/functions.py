@@ -7,6 +7,7 @@ BLUE = "\033[34m"
 MAGENTA = "\033[35m"
 CYAN = "\033[36m"
 
+
 NAME_MIN, NAME_MAX = 2, 200
 AVAILABILITY_FALSE, AVAILABILITY_TRUE = False, True
 YEAR_MIN, YEAR_MAX = 0, 2025
@@ -14,10 +15,10 @@ YEAR_MIN, YEAR_MAX = 0, 2025
 from pathlib import Path
 DATEI = Path("library.json")
 
-def f_wait_for_enter() -> None:
+def f_wait_for_enter():
     input("\nDrücken Sie ENTER, um fortzufahren...\n")
 
-def f_print_title(text: str) -> None:
+def f_print_title(text):
     breit = 70
     print(f"{YELLOW}{'='*breit}{RESET}")
     print(BOLD + BLUE + text.center(breit) + RESET)
@@ -28,7 +29,7 @@ def _status_text(avail: bool) -> str:
 
 from tabulate import tabulate
 
-def f_print_all_books(books: dict) -> None:
+def f_print_all_books(books):
     f_print_title("Alle Bücher:")
     for t, d in books.items():
         if not isinstance(d, dict) or not {"author", "year", "available"} <= set(d):
@@ -45,7 +46,7 @@ def f_print_all_books(books: dict) -> None:
     print(tabulate(table, headers=[BOLD+"Titel"+RESET, "Autor", "Erscheinungsjahr", "Verfügbarkeit"], tablefmt="fancy_grid"))
     f_wait_for_enter()
 
-def f_show_menu() -> str:
+def f_show_menu():
     f_print_title("📖 Menü")
     print("A - Alle Bücher anzeigen")
     print("B - Neues Buch hinzufügen")
@@ -69,7 +70,7 @@ def f_load_books(all_books: dict) -> bool:
         return False
 
 
-def f_save_books(all_books: dict) -> bool:
+def f_save_books(all_books) :
     import json
     try:
         with open(DATEI, "w", encoding="utf-8") as f:
@@ -78,7 +79,7 @@ def f_save_books(all_books: dict) -> bool:
     except Exception:
         return False
 
-def f_safe_year(prompt: str) -> int:
+def f_safe_year(prompt):
     while True:
         raw = input(prompt).strip()
         try:
@@ -90,13 +91,13 @@ def f_safe_year(prompt: str) -> int:
         except ValueError:
             print("Bitte eine ganze Zahl eingeben.")
 
-def f_ok_len(length: int, min: int, max: int) -> bool:
+def f_ok_len(length, min, max) :
     return min <= length <= max
 
-def f_valid_name(name_length: int) -> bool:
+def f_valid_name(name_length):
     return f_ok_len(name_length, NAME_MIN, NAME_MAX)
 
-def f_add_book(data: dict) -> None:
+def f_add_book(data) :
     f_print_title("Buch hinzufügen")
     titel = input("Titel: ").strip()
     if not f_valid_name(len(titel)):
@@ -122,7 +123,7 @@ def f_add_book(data: dict) -> None:
     f_save_books(data)
     f_wait_for_enter()
 
-def f_find_book(all_books: dict) -> str:
+def f_find_book(all_books) :
     while True:
         find_book = input("Bitte geben Sie den Name des Buches ein:\n").strip()
         if find_book not in all_books:
@@ -131,7 +132,7 @@ def f_find_book(all_books: dict) -> str:
         f_print_all_books({find_book: all_books[find_book]})
         return find_book
 
-def f_status(data: dict) -> None:
+def f_status(data) :
     titel = f_find_book(data)
     status_change = input("Möchten Sie Status ändern? (J/N)\n").strip().upper()
     status_old = data[titel].get("available")
