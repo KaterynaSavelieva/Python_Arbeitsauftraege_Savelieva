@@ -9,18 +9,34 @@ NAME_MIN, NAME_MAX = 2, 20
 INGREDIENT_MAX = 30
 
 from tabulate import tabulate
-
-def f_print_all_recipes(recipes):             # Parameter: recipes (zeigt z. B. auf all_recipes)
-    f_print_title("📖👩‍🍳 Alle Rezepte:")
-    table=[]
-    for name, details in sorted(recipes.items()):     # Variable name = Schlüssel, details = Value
-        #print(f"🍴 {name}")  # Rezeptname
-        #print(f"   Zutaten: {', '.join(details['zutaten'])}")   # Variable details
-        #print(f"   Zubereitung: {details['zubereitung']}\n")    # Variable details
-        ingredients = ", ".join(details["zutaten"])
-        instruction = details['zubereitung']
-        table.append([name, ingredients, instruction])
-    print(tabulate(table, headers=[BOLD +"Rezept", "Zutaten", "Zubereitung"+ RESET], tablefmt="fancy_grid"))
+#
+# def f_print_all_recipes(recipes):             # Parameter: recipes (zeigt z. B. auf all_recipes)
+#     f_print_title("📖👩‍🍳 Alle Rezepte:")
+#     table=[]
+#     for name, details in sorted(recipes.items()):     # Variable name = Schlüssel, details = Value
+#         #print(f"🍴 {name}")  # Rezeptname
+#         #print(f"   Zutaten: {', '.join(details['zutaten'])}")   # Variable details
+#         #print(f"   Zubereitung: {details['zubereitung']}\n")    # Variable details
+#         ingredients = ", ".join(details["zutaten"])
+#         instruction = details['zubereitung']
+#         table.append([name, ingredients, instruction])
+#     print(tabulate(table, headers=[BOLD +"Rezept", "Zutaten", "Zubereitung"+ RESET], tablefmt="fancy_grid"))
+#     f_wait_for_enter()
+#
+def f_print_all_recipes(recipes: dict):
+    f_print_title("📖 Alle Rezepte:")
+    for name, details in recipes.items():
+        if not isinstance(details, dict) or not {"zutaten", "zubereitung"} <= set(details):
+            print(f"{RED}FEHLER IM JSON bei '{name}': {details!r}{RESET}")
+            f_wait_for_enter()
+            return
+    table = []
+    for name in sorted(recipes):
+        details = recipes[name]
+        zutaten = ", ".join(details["zutaten"])
+        zubereitung = details["zubereitung"]
+        table.append([name, zutaten, zubereitung])
+    print(tabulate(table, headers=[BOLD+"Rezept"+RESET, "Zutaten", "Zubereitung"], tablefmt="fancy_grid"))
     f_wait_for_enter()
 
 def f_show_menu()-> str:
@@ -36,23 +52,47 @@ def f_show_menu()-> str:
     return input ("Wählen Sie: ").strip().upper()
 
 def f_input_ingredients() -> list[str]:
+    # Функція запитує в користувача інгредієнти,
+    # розділені комами, і повертає список рядків.
+    # Використовує валідацію, щоб не було пустих або неправильних назв.
+
     while True:
+        # цикл, щоб питати знову, якщо введені дані некоректні
         ingredients_input = input("Bitte geben Sie die Zutaten ein:\n(getrennt durch Kommata)\n")
-        ingredients_list= [z.strip().title() for z in ingredients_input.split(",") if z.strip()]
-        # direkt parsen: splitten, trimmen, Titelcase, leere Einträge filtern
-        ok, msg = f_validate_ingredients_list(ingredients_list)# Validierung der Zutatenliste
+
+        # Обробляємо введення:
+        # 1. split(",") → розбиваємо за комами
+        # 2. z.strip()  → прибираємо пробіли
+        # 3. .title()   → робимо першу літеру великою
+        # 4. if z.strip() → відкидаємо порожні елементи
+        ingredients_list = [z.strip().title() for z in ingredients_input.split(",") if z.strip()]
+
+        # Викликаємо функцію перевірки (валідації) списку інгредієнтів
+        ok, msg = f_validate_ingredients_list(ingredients_list)
+
         if ok:
+            # якщо все добре – повертаємо список
             return ingredients_list
+        # якщо є помилка – показуємо повідомлення і питаємо ще раз
         print(f"Fehler: {msg}")
 
 def f_match_ingredients(recipe: dict[str, dict], ingredients_list: list[str]) -> dict[str, dict]:
+    # Результат: словник з рецептами, які підходять
     match_ingredients: dict[str, dict] = {}
+
+    # Перебираємо всі рецепти
     for name, details in recipe.items():
+
+        # Беремо список інгредієнтів з рецепту і переводимо у нижній регістр
+        # Це потрібно, щоб пошук був нечутливим до великих/малих літер
         details_lower_case = [z.lower() for z in details['zutaten']]
 
-        # Prüfen, ob alle gesuchten Zutaten im Rezept vorkommen
-        if all (ingredient.lower() in details_lower_case for ingredient in ingredients_list):
+        # Перевіряємо: чи ВСІ інгредієнти з пошуку містяться у цьому рецепті
+        if all(ingredient.lower() in details_lower_case for ingredient in ingredients_list):
+            # Якщо так → додаємо цей рецепт у результати
             match_ingredients[name] = details
+
+    # Повертаємо знайдені рецепти
     return match_ingredients
 
 def f_find_ingredients(all_recipes: dict) -> dict[str, dict]:
@@ -60,6 +100,13 @@ def f_find_ingredients(all_recipes: dict) -> dict[str, dict]:
     ingredients_list=f_input_ingredients()
     matches=f_match_ingredients(all_recipes, ingredients_list)
     return matches
+
+def f_print_matches(matches: dict[str, dict]) -> None:
+    if matches:
+        print("\nGefundene Rezepte:\n")
+        f_print_all_recipes(matches)
+    else:
+        print("Kein Rezept passt zu deiner Eingabe.")
 
 def f_recipe_change()-> str:
     print("1 - Hinzufügen von Zutaten")
@@ -108,12 +155,6 @@ def f_delete_ingredients(all_recipes:dict, recipe_change:str) -> None:
     f_print_all_recipes({recipe_change: all_recipes[recipe_change]})
     #f_wait_for_enter()
 
-def f_print_matches(matches: dict[str, dict]) -> None:
-    if matches:
-        print("\nGefundene Rezepte:\n")
-        f_print_all_recipes(matches)
-    else:
-        print("Kein Rezept passt zu deiner Eingabe.")
 
 def f_input_recipe_name(all_recipes: dict):
     while True:
@@ -147,24 +188,13 @@ def f_delete_recipe(all_recipes: dict[str, dict]) -> None:
         del all_recipes[name]  # aus RAM löschen
         print(f"Das Rezept '{name}' wurde gelöscht.\n")
         f_save_changes(all_recipes)
-
-#         save=input("Möchten Sie Änderung speichern? Y/N\n").strip().title()
-#         if save == "Y":
-#             if f_save_recipes(all_recipes):#, delete= [name]
-# #f_save_recipes(...) gibt True zurück, wenn das Speichern ohne Fehler geklappt hat.
-# # (z. B. Datei gesperrt, kein Speicherplatz, kaputte JSON-Datei) -False=
-#                 print(f"Rezept {name} wurde gelöscht und gespeichert")
-#             else:
-#                 print("Änderung wurde noch nicht gespeichert")
     else:
         print(f"Kein Rezept mit dem Namen '{name}' gefunden.")
 
 def f_save_changes(all_recipes: dict[str, dict]) -> None:
     save = input("Möchten Sie Änderung speichern? Y/N\n").strip().title()
     if save == "Y":
-        if f_save_recipes(all_recipes):  # , delete= [name]
-            # f_save_recipes(...) gibt True zurück, wenn das Speichern ohne Fehler geklappt hat.
-            # (z. B. Datei gesperrt, kein Speicherplatz, kaputte JSON-Datei) -False=
+        if f_save_recipes(all_recipes):
             print(f"Änderung wurde gespeichert")
     else:
         print("Änderung wurde noch nicht gespeichert")
@@ -197,18 +227,31 @@ def f_validate_recipe_name(name: str) -> tuple[bool, str]:
     return True, ""
 
 def f_validate_ingredients_list(ingredients_list: list[str]) -> tuple[bool, str]:
-    # Leere Eingabe (auch nur Kommas) wird hier erkannt
+    # Перевіряє список інгредієнтів
+    # Повертає (True, "") якщо все добре
+    # або (False, "повідомлення про помилку") якщо щось не так
+
+    # 1) Перевіряємо, щоб список не був порожній
     if not ingredients_list:
         return False, "Die Zutatenliste darf nicht leer sein."
 
+    # 2) Перевіряємо кожен інгредієнт окремо
     for z in ingredients_list:
+        # --- Перевірка довжини ---
         ok, msg = f_check_length(z, NAME_MIN, INGREDIENT_MAX)
         if not ok:
             return False, "Zutat: " + msg
-        # Zutaten: Buchstaben + Ziffern + Leerzeichen erlaubt
+
+        # --- Перевірка символів ---
+        # допускаються тільки:
+        #   - літери
+        #   - цифри
+        #   - пробіли
         ok, msg = f_check_letters_and_digits(z)
         if not ok:
             return False, "Zutat: " + msg
+
+    # 3) Якщо всі інгредієнти пройшли перевірку → успіх
     return True, ""
 
 import json
@@ -219,7 +262,7 @@ import json
 def f_save_recipes(all_recipes: dict, subset: dict  | None=None, delete: list[str]| None=None ) -> bool:
     #Speichert alle Rezepte in der Datei rezepte.json.
     try:
-        to_save =dict(all_recipes)
+        to_save =dict(all_recipes) # Щоб не зіпсувати оригінал, працюємо з копією.
         # Falls nur bestimmte Rezepte gespeichert werden sollen
         if subset: # Nur die übergebenen Rezepte speichern. Zuerst die bestehende Datei öffnen und laden
             to_save.update(subset)             # überschreibt gleiche Keys oder fügt neue hinzu
