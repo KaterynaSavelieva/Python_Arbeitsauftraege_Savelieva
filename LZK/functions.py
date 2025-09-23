@@ -29,7 +29,7 @@ def _status_text(avail: bool) -> str:
 from tabulate import tabulate
 
 def f_print_all_books(books: dict) -> None:
-    f_print_title("📚 Alle Bücher:")
+    f_print_title("Alle Bücher:")
     for t, d in books.items():
         if not isinstance(d, dict) or not {"author", "year", "available"} <= set(d):
             print(f"{RED}FEHLER IM JSON bei '{t}': {d!r}{RESET}")
@@ -42,7 +42,7 @@ def f_print_all_books(books: dict) -> None:
         year = details['year']
         available = details['available']
         table.append([titel, autor, year, _status_text(available)])
-    print(tabulate(table, headers=[BOLD+"Titel"+RESET, "Autor", "Erscheinungsjahr", "Verfügbarkeit"]))
+    print(tabulate(table, headers=[BOLD+"Titel"+RESET, "Autor", "Erscheinungsjahr", "Verfügbarkeit"], tablefmt="fancy_grid"))
     f_wait_for_enter()
 
 def f_show_menu() -> str:
@@ -59,20 +59,15 @@ def f_load_books(all_books: dict) -> bool:
     try:
         with open(DATEI, "r", encoding="utf-8") as f:
             data = json.load(f)
-        for t, d in data.items():
-            if not isinstance(d, dict) or not {"author", "year", "available"} <= set(d):
-                print(f"{RED}FEHLER IM JSON bei '{t}': {d!r}{RESET}")
-                return False
         all_books.clear()
         all_books.update(data)
         return True
     except FileNotFoundError:
         all_books.clear()
         return True
-    except json.JSONDecodeError:
-        return False
     except Exception:
         return False
+
 
 def f_save_books(all_books: dict) -> bool:
     import json
