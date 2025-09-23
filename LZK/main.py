@@ -1,29 +1,26 @@
-from functions import*
-f_print_title("Herzlich Willkommen im Buchbestand der Stadtbücherei `LeseLust`")
+from functions import *
 
 all_books = {}
 
 def main() -> None:
     f_load_books(all_books)
-
     while True:
         user_choice = f_show_menu()
-        match user_choice.strip().upper():
-            case "A":
+        match user_choice:
+            case 'A':
                 f_print_all_books(all_books)
-            case "B":
+            case 'B':
                 f_add_book(all_books)
-            case "C":
+            case 'C':
                 f_status(all_books)
-            case "D":
+            case 'D':
                 f_find_book(all_books)
-            case "Q":
+            case 'Q':
                 f_save_books(all_books)
                 print("Auf Wiedersehen!")
                 break
             case _:
-                print("Ungültige Eingabe. Bitte A, B, C, D, oder Q wählen.")
-                f_wait_for_enter()
+                print("Ungültige Auswahl.")
 
 if __name__ == "__main__":
     main()
