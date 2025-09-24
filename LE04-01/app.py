@@ -15,7 +15,7 @@ def f_save_all_recipe():
 def run_gui():
     root = tk.Tk()
     root.title("Rezepte-Manager")
-    root.geometry("800x600")
+    root.geometry("900x500")
 
     # каркас 2 колонки у пропорції 2:3
     main = ttk.Frame(root, padding=20)

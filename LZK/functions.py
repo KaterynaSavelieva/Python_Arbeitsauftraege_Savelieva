@@ -8,9 +8,9 @@ MAGENTA = "\033[35m"
 CYAN = "\033[36m"
 
 
-NAME_MIN, NAME_MAX = 2, 200
+NAME_MIN, NAME_MAX = 2, 20
 AVAILABILITY_FALSE, AVAILABILITY_TRUE = False, True
-YEAR_MIN, YEAR_MAX = 0, 2025
+YEAR_MIN, YEAR_MAX = 1, 2025
 
 from pathlib import Path
 DATEI = Path("library.json")
@@ -24,7 +24,7 @@ def f_print_title(text):
     print(BOLD + BLUE + text.center(breit) + RESET)
     print(f"{YELLOW}{'='*breit}{RESET}")
 
-def _status_text(avail: bool) -> str:
+def f_status_text(avail: bool) -> str:
     return "verfügbar" if avail else "ausgeliehen"
 
 from tabulate import tabulate
@@ -42,7 +42,7 @@ def f_print_all_books(books):
         autor = details['author']
         year = details['year']
         available = details['available']
-        table.append([titel, autor, year, _status_text(available)])
+        table.append([titel, autor, year, f_status_text(available)])
     print(tabulate(table, headers=[BOLD+"Titel"+RESET, "Autor", "Erscheinungsjahr", "Verfügbarkeit"], tablefmt="fancy_grid"))
     f_wait_for_enter()
 
@@ -140,7 +140,7 @@ def f_status(data) :
         status_new = (AVAILABILITY_TRUE if status_old == AVAILABILITY_FALSE else AVAILABILITY_FALSE)
         data[titel]["available"] = status_new
         f_save_books(data)
-        print(f"Änderung wurde gespeichert. Neuer Status: {_status_text(status_new)}")
+        print(f"Änderung wurde gespeichert. Neuer Status: {f_status_text(status_new)}")
     else:
         print("Änderung wurde noch nicht gespeichert")
     f_wait_for_enter()

@@ -199,7 +199,6 @@ def f_save_changes(all_recipes: dict[str, dict]) -> None:
     else:
         print("Änderung wurde noch nicht gespeichert")
 
-
 def f_check_length(value: str, min_len: int, max_len: int) -> tuple[bool, str]:
     if not (min_len <= len(value) <= max_len):
         return False, f"„{value}“ muss zwischen {min_len} und {max_len} Zeichen lang sein."

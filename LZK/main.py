@@ -2,6 +2,7 @@ from functions import *
 
 all_books = {}
 
+
 def main() -> None:
     f_load_books(all_books)
     while True:

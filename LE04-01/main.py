@@ -2,9 +2,8 @@ from functions_new import*
 f_print_title("Herzlich Willkommen beim Rezepte-Manager der Welt!")
 from data  import *
 
-
 all_recipes = f_load_recipes(all_recipes)
-# --- Hauptprogramm ---
+
 while True:
     user_choice = f_show_menu()
     match user_choice.strip().upper():
